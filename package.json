@@ -1,0 +1,16 @@
+{
+  "name": "form-management-system",
+  "private": true,
+  "workspaces": [
+    "FE",
+    "BE"
+  ],
+  "scripts": {
+    "dev": "concurrently \"yarn workspace be dev\" \"yarn workspace fe dev\"",
+    "build": "yarn workspace be build && yarn workspace fe build",
+    "test": "yarn workspace be test"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0"
+  }
+}

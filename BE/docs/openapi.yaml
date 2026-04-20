@@ -1,0 +1,458 @@
+openapi: 3.0.3
+info:
+  title: Form Management API
+  version: 1.1.0
+  description: API cho he thong quan ly form (Admin/SW)
+servers:
+  - url: http://localhost:4000
+tags:
+  - name: Auth
+    description: Dang nhap va lay thong tin user
+  - name: Forms
+    description: Quan ly Form
+  - name: Fields
+    description: Quan ly Field trong Form
+  - name: Submissions
+    description: Submit va xem Submission
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    ApiError:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+            details:
+              nullable: true
+      required: [success, error]
+    FieldOption:
+      type: object
+      properties:
+        label:
+          type: string
+        value:
+          type: string
+      required: [label, value]
+    Field:
+      type: object
+      properties:
+        id:
+          type: integer
+        formId:
+          type: integer
+        label:
+          type: string
+        type:
+          type: string
+          enum: [TEXT, NUMBER, DATE, COLOR, SELECT]
+        order:
+          type: integer
+        required:
+          type: boolean
+        options:
+          type: array
+          items:
+            $ref: '#/components/schemas/FieldOption'
+          nullable: true
+      required: [id, formId, label, type, order, required]
+    Form:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        description:
+          type: string
+          nullable: true
+        order:
+          type: integer
+        status:
+          type: string
+          enum: [ACTIVE, DRAFT]
+        fields:
+          type: array
+          items:
+            $ref: '#/components/schemas/Field'
+      required: [id, title, order, status, fields]
+    CreateFormInput:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        order:
+          type: integer
+        status:
+          type: string
+          enum: [ACTIVE, DRAFT]
+      required: [title, order, status]
+    UpdateFormInput:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        order:
+          type: integer
+        status:
+          type: string
+          enum: [ACTIVE, DRAFT]
+    CreateFieldInput:
+      type: object
+      properties:
+        label:
+          type: string
+        type:
+          type: string
+          enum: [TEXT, NUMBER, DATE, COLOR, SELECT]
+        order:
+          type: integer
+        required:
+          type: boolean
+        options:
+          type: array
+          items:
+            $ref: '#/components/schemas/FieldOption'
+      required: [label, type, order, required]
+    UpdateFieldInput:
+      type: object
+      properties:
+        label:
+          type: string
+        type:
+          type: string
+          enum: [TEXT, NUMBER, DATE, COLOR, SELECT]
+        order:
+          type: integer
+        required:
+          type: boolean
+        options:
+          type: array
+          items:
+            $ref: '#/components/schemas/FieldOption'
+    ReorderInput:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+              order:
+                type: integer
+            required: [id, order]
+      required: [items]
+    LoginInput:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+      required: [email, password]
+    SubmitInput:
+      type: object
+      properties:
+        values:
+          type: object
+          additionalProperties: true
+      required: [values]
+
+paths:
+  /api/auth/login:
+    post:
+      tags: [Auth]
+      summary: Login bang email/password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginInput'
+      responses:
+        '201':
+          description: Dang nhap thanh cong
+        '401':
+          description: Sai thong tin dang nhap
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+
+  /api/auth/me:
+    get:
+      tags: [Auth]
+      summary: Lay thong tin user dang dang nhap
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: User info
+        '401':
+          description: Chua dang nhap
+
+  /api/forms:
+    get:
+      tags: [Forms]
+      summary: Lay danh sach form (Admin)
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 1
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 10
+        - in: query
+          name: search
+          schema:
+            type: string
+        - in: query
+          name: status
+          schema:
+            type: string
+            enum: [ACTIVE, DRAFT]
+      responses:
+        '200':
+          description: Danh sach form
+    post:
+      tags: [Forms]
+      summary: Tao form moi (Admin)
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateFormInput'
+      responses:
+        '201':
+          description: Tao thanh cong
+
+  /api/forms/reorder:
+    put:
+      tags: [Forms]
+      summary: Reorder nhieu form (Admin)
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReorderInput'
+      responses:
+        '200':
+          description: Reorder thanh cong
+
+  /api/forms/active:
+    get:
+      tags: [Forms]
+      summary: Lay danh sach form active theo thu tu
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Danh sach form active
+
+  /api/forms/{formId}:
+    get:
+      tags: [Forms]
+      summary: Lay chi tiet form
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: formId
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Chi tiet form
+    put:
+      tags: [Forms]
+      summary: Cap nhat form (Admin)
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: formId
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateFormInput'
+      responses:
+        '200':
+          description: Cap nhat thanh cong
+    delete:
+      tags: [Forms]
+      summary: Xoa form (Admin)
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: formId
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Xoa thanh cong
+
+  /api/forms/{formId}/fields:
+    post:
+      tags: [Fields]
+      summary: Them field vao form (Admin)
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: formId
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateFieldInput'
+      responses:
+        '201':
+          description: Them field thanh cong
+
+  /api/forms/{formId}/fields/reorder:
+    put:
+      tags: [Fields]
+      summary: Reorder nhieu field trong form (Admin)
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: formId
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReorderInput'
+      responses:
+        '200':
+          description: Reorder field thanh cong
+
+  /api/forms/{formId}/fields/{fieldId}:
+    put:
+      tags: [Fields]
+      summary: Cap nhat field (Admin)
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: formId
+          required: true
+          schema:
+            type: integer
+        - in: path
+          name: fieldId
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateFieldInput'
+      responses:
+        '200':
+          description: Cap nhat field thanh cong
+    delete:
+      tags: [Fields]
+      summary: Xoa field (Admin)
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: formId
+          required: true
+          schema:
+            type: integer
+        - in: path
+          name: fieldId
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Xoa field thanh cong
+
+  /api/forms/{formId}/submit:
+    post:
+      tags: [Submissions]
+      summary: SW submit form
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: formId
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubmitInput'
+      responses:
+        '201':
+          description: Submit thanh cong
+        '422':
+          description: Validation loi
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+
+  /api/submission:
+    get:
+      tags: [Submissions]
+      summary: Lay danh sach submission (Admin)
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Danh sach submission

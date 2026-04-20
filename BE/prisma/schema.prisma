@@ -1,0 +1,78 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum FormStatus {
+  ACTIVE
+  DRAFT
+}
+
+enum FieldType {
+  TEXT
+  NUMBER
+  DATE
+  COLOR
+  SELECT
+}
+
+enum UserRole {
+  ADMIN
+  SW
+}
+
+model User {
+  id           Int          @id @default(autoincrement())
+  email        String       @unique
+  passwordHash String
+  role         UserRole
+  submissions  Submission[]
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+}
+
+model Form {
+  id          Int          @id @default(autoincrement())
+  title       String
+  description String?
+  order       Int
+  status      FormStatus   @default(DRAFT)
+  fields      Field[]
+  submissions Submission[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  @@index([status, order])
+}
+
+model Field {
+  id        Int       @id @default(autoincrement())
+  formId    Int
+  label     String
+  type      FieldType
+  order     Int
+  required  Boolean   @default(false)
+  options   Json?
+  form      Form      @relation(fields: [formId], references: [id], onDelete: Cascade)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([formId, order])
+}
+
+model Submission {
+  id        Int      @id @default(autoincrement())
+  formId    Int
+  userId    Int
+  answers   Json
+  form      Form     @relation(fields: [formId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Restrict)
+  createdAt DateTime @default(now())
+
+  @@index([formId, createdAt])
+  @@index([userId, createdAt])
+}
