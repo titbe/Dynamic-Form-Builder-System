@@ -453,6 +453,17 @@ paths:
       summary: Lay danh sach submission (Admin)
       security:
         - BearerAuth: []
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 1
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 10
       responses:
         '200':
-          description: Danh sach submission
+          description: Danh sach submission co phan trang

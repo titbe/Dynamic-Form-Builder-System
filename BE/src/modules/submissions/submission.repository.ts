@@ -12,24 +12,29 @@ export const submissionRepository = {
     });
   },
 
-  list() {
-    return prisma.submission.findMany({
-      include: {
-        form: {
-          select: {
-            id: true,
-            title: true
+  list(params: { skip: number; take: number }) {
+    return prisma.$transaction([
+      prisma.submission.findMany({
+        skip: params.skip,
+        take: params.take,
+        include: {
+          form: {
+            select: {
+              id: true,
+              title: true
+            }
+          },
+          user: {
+            select: {
+              id: true,
+              email: true,
+              role: true
+            }
           }
         },
-        user: {
-          select: {
-            id: true,
-            email: true,
-            role: true
-          }
-        }
-      },
-      orderBy: [{ createdAt: "desc" }]
-    });
+        orderBy: [{ createdAt: "desc" }]
+      }),
+      prisma.submission.count()
+    ]);
   }
 };

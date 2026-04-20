@@ -1,6 +1,6 @@
 "use client";
 
-import { ActionIcon, Loader, Pagination, Select, Table, TextInput } from "@mantine/core";
+import { Loader, Pagination, Select, Table, TextInput } from "@mantine/core";
 import { IconSearch } from "@tabler/icons-react";
 import {
   ColumnDef,

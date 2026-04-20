@@ -135,7 +135,7 @@ Services:
 
 - `GET /api/forms/active`
 - `POST /api/forms/:formId/submit`
-- `GET /api/submission`
+- `GET /api/submission` (hỗ trợ `page`, `limit`)
 
 ### Auth
 

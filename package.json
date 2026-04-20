@@ -8,7 +8,9 @@
   "scripts": {
     "dev": "concurrently \"yarn workspace be dev\" \"yarn workspace fe dev\"",
     "build": "yarn workspace be build && yarn workspace fe build",
-    "test": "yarn workspace be test"
+    "test": "yarn workspace be test",
+    "lint": "yarn workspace be lint && yarn workspace fe lint",
+    "lint:fix": "yarn workspace be lint:fix && yarn workspace fe lint:fix"
   },
   "devDependencies": {
     "concurrently": "^9.1.0"
