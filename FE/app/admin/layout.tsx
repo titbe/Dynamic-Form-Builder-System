@@ -1,6 +1,6 @@
 "use client";
 
-import { AuthGuard } from "@/components/auth/auth-guard";
+import { AuthGuard } from "@/lib/core/auth/auth-guard";
 import { AuthHeader } from "@/components/auth/auth-header";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {

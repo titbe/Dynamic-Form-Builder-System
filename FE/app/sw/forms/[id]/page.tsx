@@ -5,7 +5,7 @@ import { useParams } from "next/navigation";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { PageShell } from "@/components/core/page-shell";
 import { DynamicFormRenderer } from "@/components/forms/dynamic-form-renderer";
-import { formsApi } from "@/lib/api/forms";
+import { formsService } from "@/lib/api";
 
 export default function SwFormSubmitPage() {
   const params = useParams<{ id: string }>();
@@ -13,11 +13,11 @@ export default function SwFormSubmitPage() {
 
   const formQuery = useQuery({
     queryKey: ["form", formId],
-    queryFn: () => formsApi.getFormById(formId)
+    queryFn: () => formsService.getFormById(formId)
   });
 
   const submitMutation = useMutation({
-    mutationFn: (values: Record<string, unknown>) => formsApi.submitForm(formId, values)
+    mutationFn: (values: Record<string, unknown>) => formsService.submitForm(formId, values)
   });
 
   return (

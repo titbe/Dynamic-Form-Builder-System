@@ -3,7 +3,7 @@
 import { Button } from "@mantine/core";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useAuth } from "./auth-provider";
+import { useAuth } from "@/lib/core/auth/auth-provider";
 
 export const AuthHeader = () => {
   const router = useRouter();

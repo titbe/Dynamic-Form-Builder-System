@@ -1,16 +1,26 @@
-const required = (value: string | undefined, key: string): string => {
-  if (!value) {
-    throw new Error(`Missing environment variable: ${key}`);
-  }
-  return value;
-};
+import { randomBytes } from "crypto";
 
 export const env = {
   port: Number(process.env.PORT ?? 4000),
-  databaseUrl: required(process.env.DATABASE_URL, "DATABASE_URL"),
-  jwtSecret: required(process.env.JWT_SECRET, "JWT_SECRET"),
+  databaseUrl: process.env.DATABASE_URL ?? "postgresql://postgres:postgres@localhost:5433/form_management?schema=public",
+  redisUrl: process.env.REDIS_URL ?? "redis://localhost:6380",
+
+  // JWT secret (for HS256/HS512 symmetric signing)
+  jwtPrivateKey: process.env.JWT_SECRET ?? "your-super-secret-key-change-in-production",
+  jwtPublicKey: process.env.JWT_SECRET ?? "your-super-secret-key-change-in-production",
+
+  // Token expiry times
+  accessTokenExpiry: "15m",
+  refreshTokenExpiry: "7d",
+
+  // Default users
   adminEmail: process.env.ADMIN_EMAIL ?? "admin@example.com",
   adminPassword: process.env.ADMIN_PASSWORD ?? "admin123",
   swEmail: process.env.SW_EMAIL ?? "sw@example.com",
-  swPassword: process.env.SW_PASSWORD ?? "sw123456"
+  swPassword: process.env.SW_PASSWORD ?? "sw123456",
+  frontendUrl: process.env.FRONTEND_URL ?? "http://localhost:3000",
+};
+
+export const generateJti = (): string => {
+  return randomBytes(16).toString("hex");
 };

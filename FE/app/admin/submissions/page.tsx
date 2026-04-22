@@ -5,7 +5,7 @@ import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { DataTable } from "@/components/core/table/data-table";
 import { PageShell } from "@/components/core/page-shell";
-import { submissionApi } from "@/lib/api/submissions";
+import { submissionsService } from "@/lib/api";
 import { SubmissionEntity } from "@/lib/core/types";
 
 export default function SubmissionListPage() {
@@ -14,7 +14,7 @@ export default function SubmissionListPage() {
 
   const query = useQuery({
     queryKey: ["submissions", page, limit],
-    queryFn: () => submissionApi.list({ page, limit })
+    queryFn: () => submissionsService.list({ page, limit })
   });
 
   const columns = useMemo<ColumnDef<SubmissionEntity>[]>(

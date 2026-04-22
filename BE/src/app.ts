@@ -1,3 +1,4 @@
+import cookieParser from "cookie-parser";
 import cors from "cors";
 import express from "express";
 import { RequestHandler } from "express";
@@ -6,6 +7,7 @@ import helmet from "helmet";
 import path from "node:path";
 import swaggerUi from "swagger-ui-express";
 import YAML from "yamljs";
+import { env } from "./config/env";
 import { authRouter } from "./modules/auth/auth.route";
 import { formRouter } from "./modules/forms/form.route";
 import { submissionRouter } from "./modules/submissions/submission.route";
@@ -15,8 +17,14 @@ import { notFoundMiddleware } from "./shared/middlewares/not-found.middleware";
 export const app = express();
 
 app.use(helmet());
-app.use(cors());
+app.use(
+  cors({
+    origin: env.frontendUrl,
+    credentials: true,
+  })
+);
 app.use(express.json());
+app.use(cookieParser());
 
 const openApiPath = path.resolve(process.cwd(), "docs/openapi.yaml");
 const openApiDocument = YAML.load(openApiPath);

@@ -10,7 +10,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { PageShell } from "@/components/core/page-shell";
 import { DataTable } from "@/components/core/table/data-table";
 import { FieldEditorDialog } from "@/components/forms/field-editor-dialog";
-import { formsApi } from "@/lib/api/forms";
+import { formsService } from "@/lib/api";
 import { FieldEntity } from "@/lib/core/types";
 
 export default function FormDetailPage() {
@@ -22,11 +22,11 @@ export default function FormDetailPage() {
 
   const formQuery = useQuery({
     queryKey: ["form", formId],
-    queryFn: () => formsApi.getFormById(formId)
+    queryFn: () => formsService.getFormById(formId)
   });
 
   const addFieldMutation = useMutation({
-    mutationFn: (payload: Parameters<typeof formsApi.addField>[1]) => formsApi.addField(formId, payload),
+    mutationFn: (payload: Parameters<typeof formsService.addField>[1]) => formsService.addField(formId, payload),
     onSuccess: () => {
       setOpened(false);
       queryClient.invalidateQueries({ queryKey: ["form", formId] });
@@ -34,8 +34,8 @@ export default function FormDetailPage() {
   });
 
   const updateFieldMutation = useMutation({
-    mutationFn: ({ fieldId, payload }: { fieldId: number; payload: Parameters<typeof formsApi.updateField>[2] }) =>
-      formsApi.updateField(formId, fieldId, payload),
+    mutationFn: ({ fieldId, payload }: { fieldId: number; payload: Parameters<typeof formsService.updateField>[2] }) =>
+      formsService.updateField(formId, fieldId, payload),
     onSuccess: () => {
       setOpened(false);
       setEditingField(null);
@@ -44,12 +44,12 @@ export default function FormDetailPage() {
   });
 
   const deleteFieldMutation = useMutation({
-    mutationFn: (fieldId: number) => formsApi.deleteField(formId, fieldId),
+    mutationFn: (fieldId: number) => formsService.deleteField(formId, fieldId),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["form", formId] })
   });
 
   const reorderMutation = useMutation({
-    mutationFn: (items: Array<{ id: number; order: number }>) => formsApi.reorderFields(formId, items),
+    mutationFn: (items: Array<{ id: number; order: number }>) => formsService.reorderFields(formId, items),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["form", formId] })
   });
 
