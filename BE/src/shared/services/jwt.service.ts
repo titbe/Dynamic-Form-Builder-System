@@ -1,8 +1,10 @@
 import jwt from "jsonwebtoken";
 import { UserRole } from "@prisma/client";
-import { env } from "../../config/env";
+import ms from "ms";
 
-const JWT_SECRET = env.jwtPrivateKey;
+const JWT_SECRET = process.env.JWT_SECRET || "abc123";
+const ACCESS_TOKEN_EXPIRED = (process.env.ACCESS_TOKEN_EXPIRED || "1h") as ms.StringValue;
+const REFRESH_TOKEN_EXPIRED = (process.env.REFRESH_TOKEN_EXPIRED || "7d") as ms.StringValue;
 
 export interface AccessTokenPayload {
   sub: string;
@@ -20,14 +22,14 @@ export interface RefreshTokenPayload {
 
 export const jwtService = {
   signAccessToken(payload: Omit<AccessTokenPayload, "type">): string {
-    return jwt.sign(payload, JWT_SECRET, {
-      expiresIn: "15m",
+    return jwt.sign({ ...payload, type: "access" }, JWT_SECRET, {
+      expiresIn: ms(ACCESS_TOKEN_EXPIRED) / 1000,
     });
   },
 
   signRefreshToken(payload: Omit<RefreshTokenPayload, "type">): string {
-    return jwt.sign(payload, JWT_SECRET, {
-      expiresIn: "7d",
+    return jwt.sign({ ...payload, type: "refresh" }, JWT_SECRET, {
+      expiresIn: ms(REFRESH_TOKEN_EXPIRED) / 1000,
     });
   },
 

@@ -7,7 +7,6 @@ import helmet from "helmet";
 import path from "node:path";
 import swaggerUi from "swagger-ui-express";
 import YAML from "yamljs";
-import { env } from "./config/env";
 import { authRouter } from "./modules/auth/auth.route";
 import { formRouter } from "./modules/forms/form.route";
 import { submissionRouter } from "./modules/submissions/submission.route";
@@ -19,7 +18,7 @@ export const app = express();
 app.use(helmet());
 app.use(
   cors({
-    origin: env.frontendUrl,
+    origin: process.env.FRONTEND_URL,
     credentials: true,
   })
 );

@@ -26,7 +26,9 @@ export default function SubmissionListPage() {
       },
       {
         header: "Answers",
-        cell: ({ row }) => JSON.stringify(row.original.answers)
+        cell: ({ row }) => (
+          <div className="font-mono text-xs">{JSON.stringify(row.original.answers)}</div>
+        )
       },
       {
         header: "Submitted By",

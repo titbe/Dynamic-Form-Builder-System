@@ -1,7 +1,8 @@
 import Redis from "ioredis";
-import { env } from "./env";
 
-export const redis = new Redis(env.redisUrl, {
+const redisUrl = process.env.REDIS_URL || "redis://localhost:6380";
+
+export const redis = new Redis(redisUrl, {
   retryStrategy: (times: number) => {
     const delay = Math.min(times * 50, 2000);
     return delay;

@@ -1,10 +1,18 @@
 import bcrypt from "bcryptjs";
 import { UserRole } from "@prisma/client";
-import { env, generateJti } from "../../config/env";
 import { AppError } from "../../shared/errors/app-error";
 import { jwtService } from "../../shared/services/jwt.service";
 import { cacheService } from "../../shared/services/cache.service";
 import { authRepository } from "./auth.repository";
+import { generateJti } from "../../shared/utils/string";
+
+const env = {
+  adminEmail: process.env.ADMIN_EMAIL || "[EMAIL_ADDRESS]",
+  adminPassword: process.env.ADMIN_PASSWORD || "admin123",
+  swEmail: process.env.SW_EMAIL || "[EMAIL_ADDRESS]",
+  swPassword: process.env.SW_PASSWORD || "sw123",
+};
+
 
 export const authService = {
   async ensureDefaultUsers() {

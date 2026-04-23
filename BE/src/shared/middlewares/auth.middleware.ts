@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import { UserRole } from "@prisma/client";
-import { jwtService, AccessTokenPayload } from "../services/jwt.service";
+import { jwtService } from "../services/jwt.service";
 import { cacheService } from "../services/cache.service";
 
 export interface AuthUser {
@@ -11,6 +11,7 @@ export interface AuthUser {
 }
 
 declare global {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace Express {
     interface Request {
       authUser?: AuthUser;
@@ -77,7 +78,8 @@ export const requireAuth = (...roles: UserRole[]) => {
 
 export const requireRefreshToken = () => {
   return async (req: Request, res: Response, next: NextFunction) => {
-    const token = req.cookies?.refreshToken || extractBearerToken(req);
+    // Ưu tiên lấy từ Cookie -> Body -> Authorization Header
+    const token = req.cookies?.refreshToken || req.body?.refreshToken || extractBearerToken(req);
 
     if (!token) {
       return sendUnauthorized(res, "AUTH_UNAUTHORIZED", "Missing refresh token");
