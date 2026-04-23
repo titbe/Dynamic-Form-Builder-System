@@ -4,6 +4,7 @@ import { SubmissionEntity } from "../core/types";
 export interface SubmissionListParams {
   page: number;
   limit: number;
+  search?: string;
 }
 
 export const submissionsService = {
