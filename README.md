@@ -155,17 +155,29 @@ Tạo file `BE/.env`:
 PORT=4000
 DATABASE_URL=postgresql://postgres:postgres@localhost:5433/form_management?schema=public
 REDIS_URL=redis://localhost:6380
-JWT_SECRET=change-me-in-production
+JWT_SECRET=5tE++2dkLQnuRlyPje5uCVPY1XoUoXlK37QaakQOh9Y=
 ADMIN_EMAIL=admin@example.com
 ADMIN_PASSWORD=admin123
 SW_EMAIL=sw@example.com
 SW_PASSWORD=sw123456
+FRONTEND_URL=http://localhost:3000
+ACCESS_TOKEN_EXPIRED=1h
+REFRESH_TOKEN_EXPIRED=7d
+SEED_ACTIVE_FORMS=20
+SEED_DRAFT_FORMS=8
+SEED_SW_USERS=6
 ```
 
-Tạo file `FE/.env.local`:
+Tạo file `FE/.env`:
 
 ```env
-NEXT_PUBLIC_API_URL=http://localhost:4000
+NEXT_PUBLIC_API_URL=http://localhost:4000/api/
+```
+
+Tạo file `.env`:
+
+```env
+JWT_SECRET=5tE++2dkLQnuRlyPje5uCVPY1XoUoXlK37QaakQOh9Y=
 ```
 
 ### Bước 4: Khởi tạo database
