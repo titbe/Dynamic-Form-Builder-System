@@ -39,6 +39,7 @@ services:
       ADMIN_PASSWORD: admin123
       SW_EMAIL: sw@example.com
       SW_PASSWORD: sw123456
+      FRONTEND_URL: http://localhost:3000
     depends_on:
       - postgres
       - redis
