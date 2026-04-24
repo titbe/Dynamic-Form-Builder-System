@@ -25,13 +25,14 @@ export const FormEditorDialog = ({
   initial?: Partial<FormInput>;
   onSubmit: (values: FormInput) => void;
 }) => {
-  const { register, setValue, watch, handleSubmit } = useForm<FormInput>({
+  const { register, setValue, watch, handleSubmit, formState: { errors } } = useForm<FormInput>({
     defaultValues: {
       title: initial?.title ?? "",
       description: initial?.description ?? "",
       order: initial?.order ?? 0,
       status: initial?.status ?? "DRAFT"
-    }
+    },
+    mode: "onBlur"
   });
 
   useEffect(() => {
@@ -41,6 +42,11 @@ export const FormEditorDialog = ({
     setValue("status", initial?.status ?? "DRAFT");
   }, [initial, setValue, opened]);
 
+  const getFieldError = (field: keyof FormInput) => {
+    const error = errors[field];
+    return error ? error.message as string : undefined;
+  };
+
   return (
     <BaseDialog
       opened={opened}
@@ -49,16 +55,56 @@ export const FormEditorDialog = ({
       loading={loading}
       onSubmit={handleSubmit(onSubmit)}
     >
-      <TextInput label="Tên form" required {...register("title")} />
-      <Textarea label="Mô tả" minRows={2} {...register("description")} />
-      <TextInput label="Thứ tự" type="number" required {...register("order", { valueAsNumber: true })} />
+      <TextInput
+        label="Tên form"
+        required
+        placeholder="Nhập tên form"
+        error={getFieldError("title")}
+        {...register("title", {
+          required: "Tên form bắt buộc",
+          validate: (value) => {
+            if (!value || value.trim().length === 0) return "Tên form bắt buộc";
+            if (value.trim().length > 200) return "Tên form không được vượt quá 200 ký tự";
+            return true;
+          }
+        })}
+      />
+      <Textarea
+        label="Mô tả"
+        placeholder="Nhập mô tả (tùy chọn)"
+        minRows={2}
+        error={getFieldError("description")}
+        {...register("description", {
+          validate: (value) => {
+            if (!value) return true;
+            if (value.trim().length > 500) return "Mô tả không được vượt quá 500 ký tự";
+            return true;
+          }
+        })}
+      />
+      <TextInput
+        label="Thứ tự"
+        type="number"
+        required
+        placeholder="0"
+        error={getFieldError("order")}
+        {...register("order", {
+          required: "Thứ tự bắt buộc",
+          valueAsNumber: true,
+          validate: (value) => {
+            if (value === undefined || value === null) return "Thứ tự bắt buộc";
+            if (value < 0) return "Thứ tự phải là số không âm";
+            return true;
+          }
+        })}
+      />
       <Select
         label="Trạng thái"
         value={watch("status")}
         onChange={(value) => setValue("status", (value as "ACTIVE" | "DRAFT") ?? "DRAFT")}
         data={[
-          { value: "DRAFT", label: "Draft" },
-          { value: "ACTIVE", label: "Active" }
+          { value: "DRAFT", label: "Draft - Chưa công bố" },
+          { value: "ACTIVE", label: "Active - Có thể điền" }
         ]}
       />
     </BaseDialog>
