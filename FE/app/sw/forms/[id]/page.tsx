@@ -1,11 +1,11 @@
 "use client";
 
-import { Text } from "@mantine/core";
+import { notifications } from "@mantine/notifications";
 import { useParams } from "next/navigation";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { PageShell } from "@/components/core/page-shell";
 import { DynamicFormRenderer } from "@/components/forms/dynamic-form-renderer";
-import { formsApi } from "@/lib/api/forms";
+import { formsService } from "@/lib/api";
 
 export default function SwFormSubmitPage() {
   const params = useParams<{ id: string }>();
@@ -13,16 +13,34 @@ export default function SwFormSubmitPage() {
 
   const formQuery = useQuery({
     queryKey: ["form", formId],
-    queryFn: () => formsApi.getFormById(formId)
+    queryFn: () => formsService.getFormById(formId)
   });
 
   const submitMutation = useMutation({
-    mutationFn: (values: Record<string, unknown>) => formsApi.submitForm(formId, values)
+    mutationFn: (values: Record<string, unknown>) => formsService.submitForm(formId, values),
+    onSuccess: () => {
+      notifications.show({
+        title: "Thành công",
+        message: "Form đã được gửi thành công!",
+        color: "green",
+      });
+    },
+    onError: (error: Error) => {
+      notifications.show({
+        title: "Lỗi",
+        message: error.message || "Có lỗi xảy ra, vui lòng thử lại sau.",
+        color: "red",
+      });
+    }
   });
 
   return (
     <PageShell title={`Điền form #${formId}`} subtitle={formQuery.data?.data.title}>
-      {submitMutation.isSuccess ? <Text c="green">Submit thành công.</Text> : null}
+      {submitMutation.isSuccess && (
+        <div className="mb-4 rounded-lg bg-green-50 p-3 text-green-700">
+          Form đã được gửi thành công! Bạn có thể điền form khác.
+        </div>
+      )}
       <DynamicFormRenderer
         fields={formQuery.data?.data.fields ?? []}
         loading={submitMutation.isPending}

@@ -4,7 +4,7 @@ import { MantineProvider, createTheme } from "@mantine/core";
 import { Notifications } from "@mantine/notifications";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useState } from "react";
-import { AuthProvider } from "@/components/auth/auth-provider";
+import { AuthProvider } from "@/lib/core/auth/auth-provider";
 
 const theme = createTheme({
   primaryColor: "blue",

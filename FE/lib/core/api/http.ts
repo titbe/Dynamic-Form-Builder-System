@@ -1,6 +1,6 @@
 import { ApiError, ApiSuccess } from "../types";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000/api/";
 const TOKEN_KEY = "fms_access_token";
 
 export class HttpError extends Error {

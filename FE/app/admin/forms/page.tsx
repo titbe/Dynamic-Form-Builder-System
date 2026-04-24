@@ -10,7 +10,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { DataTable } from "@/components/core/table/data-table";
 import { FormEditorDialog } from "@/components/forms/form-editor-dialog";
 import { PageShell } from "@/components/core/page-shell";
-import { formsApi } from "@/lib/api/forms";
+import { formsService } from "@/lib/api";
 import { FormEntity } from "@/lib/core/types";
 
 export default function AdminFormsPage() {
@@ -24,11 +24,11 @@ export default function AdminFormsPage() {
 
   const formsQuery = useQuery({
     queryKey: ["forms", page, limit, search, statusFilter],
-    queryFn: () => formsApi.getForms({ page, limit, search, status: statusFilter ?? undefined })
+    queryFn: () => formsService.getForms({ page, limit, search, status: statusFilter ?? undefined })
   });
 
   const createMutation = useMutation({
-    mutationFn: formsApi.createForm,
+    mutationFn: formsService.createForm,
     onSuccess: () => {
       setOpened(false);
       queryClient.invalidateQueries({ queryKey: ["forms"] });
@@ -36,8 +36,8 @@ export default function AdminFormsPage() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, payload }: { id: number; payload: Parameters<typeof formsApi.updateForm>[1] }) =>
-      formsApi.updateForm(id, payload),
+    mutationFn: ({ id, payload }: { id: number; payload: Parameters<typeof formsService.updateForm>[1] }) =>
+      formsService.updateForm(id, payload),
     onSuccess: () => {
       setOpened(false);
       setEditingForm(null);
@@ -46,14 +46,14 @@ export default function AdminFormsPage() {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: formsApi.deleteForm,
+    mutationFn: formsService.deleteForm,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["forms"] });
     }
   });
 
   const reorderMutation = useMutation({
-    mutationFn: formsApi.reorderForms,
+    mutationFn: formsService.reorderForms,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["forms"] });
       queryClient.invalidateQueries({ queryKey: ["active-forms"] });

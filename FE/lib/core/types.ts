@@ -39,6 +39,12 @@ export type SubmissionEntity = {
     email: string;
     role: "ADMIN" | "SW";
   };
+  enrichedAnswers: Array<{
+    fieldId: number;
+    label: string;
+    type: string;
+    value: unknown;
+  }>;
 };
 
 export type AuthUser = {

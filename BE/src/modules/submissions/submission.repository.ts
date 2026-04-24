@@ -12,16 +12,25 @@ export const submissionRepository = {
     });
   },
 
-  list(params: { skip: number; take: number }) {
+  list(params: { skip: number; take: number; search?: string }) {
+    const where: Prisma.SubmissionWhereInput = {};
+
+    if (params.search) {
+      where.answers = {
+        path: [],
+        string_contains: params.search
+      };
+    }
+
     return prisma.$transaction([
       prisma.submission.findMany({
+        where,
         skip: params.skip,
         take: params.take,
         include: {
           form: {
-            select: {
-              id: true,
-              title: true
+            include: {
+              fields: true
             }
           },
           user: {
@@ -34,7 +43,7 @@ export const submissionRepository = {
         },
         orderBy: [{ createdAt: "desc" }]
       }),
-      prisma.submission.count()
+      prisma.submission.count({ where })
     ]);
   }
 };

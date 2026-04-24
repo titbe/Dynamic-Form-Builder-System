@@ -4,8 +4,8 @@ import { Button, PasswordInput, TextInput } from "@mantine/core";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { useMutation } from "@tanstack/react-query";
-import { authApi } from "@/lib/api/auth";
-import { useAuth } from "@/components/auth/auth-provider";
+import { authService } from "@/lib/api/auth.service";
+import { useAuth } from "@/lib/core/auth/auth-provider";
 
 type LoginInput = {
   email: string;
@@ -18,11 +18,11 @@ export default function LoginPage() {
   const { register, handleSubmit } = useForm<LoginInput>();
 
   const loginMutation = useMutation({
-    mutationFn: authApi.login,
+    mutationFn: authService.login,
     onSuccess: ({ data }) => {
-      login(data.accessToken, data.user);
+      login(data.accessToken, data.refreshToken, data.user);
       router.replace(data.user.role === "ADMIN" ? "/admin/forms" : "/sw/forms");
-    }
+    },
   });
 
   return (

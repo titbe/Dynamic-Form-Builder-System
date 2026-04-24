@@ -73,11 +73,28 @@ export const formController = {
 
   async submit(req: Request, res: Response) {
     const payload = submitFormSchema.parse(req.body);
-    const data = await formService.submitForm(toNumber(req.params.formId), {
-      ...payload,
-      userId: req.authUser!.id
-    });
-    return created(res, data);
+    
+    try {
+      const data = await formService.submitForm(toNumber(req.params.formId), {
+        ...payload,
+        userId: req.authUser!.id
+      });
+      return created(res, data);
+    } catch (error) {
+      if (error instanceof AppError && error.code === "SUBMISSION_VALIDATION_FAILED") {
+        const fieldErrors = (error.details as Array<{ fieldId: number; label: string; message: string }>)
+          .map(e => `- ${e.label}: ${e.message}`)
+          .join("\n");
+        
+        throw new AppError(
+          422,
+          "SUBMISSION_VALIDATION_FAILED",
+          `Vui lòng kiểm tra lại các trường sau:\n${fieldErrors}`,
+          error.details
+        );
+      }
+      throw error;
+    }
   },
 
   async reorderForms(req: Request, res: Response) {

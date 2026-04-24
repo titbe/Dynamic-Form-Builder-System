@@ -1,207 +1,367 @@
-# Form Management System (FE + BE)
+# Dynamic Form Builder System
 
-Kiến trúc tách rõ 2 folder:
+Full-stack application for building dynamic forms and collecting submissions from social workers (SW).
 
-- `BE`: Express + TypeScript + Prisma + PostgreSQL
-- `FE`: Next.js (App Router) + TypeScript + Tailwind + Mantine + TanStack
+## 📋 Mục lục
 
-## 1) Tech stack
+- [Giới thiệu](#giới-thiệu)
+- [Công nghệ](#công-nghệ)
+- [Cấu trúc](#cấu-trúc)
+- [Chạy để phát triển](#chạy-để-phát-triển)
+- [Chạy bằng Docker](#chạy-bằng-docker)
+- [Thông tin truy cập](#thông-tin-truy-cập)
+- [API Reference](#api-reference)
+- [Authentication](#authentication)
+- [Validation](#validation)
+- [Error Response](#error-response)
+- [Test](#test)
+- [Seed dữ liệu](#seed-dữ-liệu)
+
+---
+
+##Giới thiệu
+
+Dynamic Form Builder System cho phép:
+- **ADMIN**: Tạo, quản lý và chỉnh sửa forms với các trường động (TEXT, NUMBER, DATE, COLOR, SELECT)
+- **SW (Social Worker)**: Xem và điền các forms đang active
+
+### Tính năng chính
+
+- ✅ Hybrid JWT + Redis session (access token 15p, refresh token 7d)
+- ✅ Auto-refresh token khi bị 401
+- ✅ Drag & Drop sắp xếp fields (@dnd-kit)
+- ✅ Real-time validation với error messages
+- ✅ AutoSave draft form (localStorage)
+- ✅ Debounce search (300ms)
+- ✅ Confirmation dialogs cho delete
+
+---
+
+## Công nghệ
 
 ### Backend
 
-- ExpressJS + TypeScript
-- Prisma ORM + PostgreSQL
-- Zod (validate request)
-- Validation module tách riêng (`src/modules/validation/field-validation.ts`)
-- Error response format thống nhất
-- Pagination cho `GET /api/forms`
-- JWT authentication + role-based authorization (`ADMIN`, `SW`)
-- Unit test (Vitest) cho validation logic
-- Swagger UI tại `GET /api/docs`
-- OpenAPI yaml tại `GET /api/docs/openapi.yaml`
+- **Express.js** + TypeScript
+- **Prisma** ORM + PostgreSQL
+- **Redis** (ioredis) - Session cache
+- **JWT** (jsonwebtoken) - Authentication
+- **Zod** - Request validation
+- **bcryptjs** - Password hashing
+- **Swagger UI** - API documentation
 
 ### Frontend
 
-- Next.js 14 + TypeScript
-- Mantine UI + TailwindCSS
-- TanStack Query (data fetching)
-- TanStack Table (bảng tái sử dụng)
-- Framer Motion (animation)
-- Core component dùng lại:
-  - `DataTable` (search, filter, pagination, rowActions)
-  - `BaseDialog`
-  - `PageShell`
-  - `DynamicFormRenderer`
+- **Next.js 14** (App Router) + TypeScript
+- **Mantine UI** + TailwindCSS - UI components
+- **TanStack Query** - Data fetching
+- **TanStack Table** - Data tables
+- **React Hook Form** - Form handling
+- **@dnd-kit** - Drag and drop
+- **Framer Motion** - Animations
+- **Axios** - HTTP client with interceptors
 
-## 2) Cấu trúc thư mục
+---
+
+## Cấu trúc
 
 ```text
 .
-├── BE
-│   ├── prisma/schema.prisma
-│   ├── docs/openapi.yaml
-│   └── src
-│       ├── modules
-│       │   ├── forms
-│       │   ├── submissions
-│       │   └── validation
-│       └── shared
-├── FE
-│   ├── app
-│   │   ├── admin/forms
-│   │   └── sw/forms
-│   ├── components/core
-│   └── lib
-└── docker-compose.yml
+├── BE/                           # Backend
+│   ├── prisma/
+│   │   └── schema.prisma         # Database schema
+│   ├── docs/
+│   │   └── openapi.yaml         # OpenAPI spec
+│   └── src/
+│       ├── config/
+│       │   └── redis.ts          # Redis configuration
+│       ├── modules/
+│       │   ├── auth/            # Authentication
+│       │   ├── forms/          # Form management
+│       │   ├── submissions/    # Submissions
+│       │   └── validation/     # Field validation
+│       └── shared/
+│           ├── services/
+│           │   ├── jwt.service.ts    # JWT service
+│           │   └── cache.service.ts  # Redis cache
+│           ├── middlewares/
+│           │   └── auth.middleware.ts
+│           └── errors/
+│
+├── FE/                           # Frontend
+│   ├── app/
+│   │   ├── admin/
+│   │   │   ├── forms/         # Admin forms page
+│   │   │   ├── forms/[id]/    # Form detail + fields
+│   │   │   └── submissions/   # Submissions list
+│   │   └── sw/
+│   │       ├── forms/         # Active forms list
+│   │       └── forms/[id]/    # Form submission
+│   ├── components/
+│   │   ├── auth/
+│   │   ├── core/
+│   │   │   ├── table/data-table.tsx
+│   │   │   ├── dialog/base-dialog.tsx
+│   │   │   └── page-shell.tsx
+│   │   ├── fields/
+│   │   │   ├── draggable-field-list.tsx  # @dnd-kit
+│   │   │   └── sortable-field-item.tsx
+│   │   ├── forms/
+│   │   │   ├── dynamic-form-renderer.tsx
+│   │   │   ├── field-editor-dialog.tsx
+│   │   │   └── form-editor-dialog.tsx
+│   │   └── ui/
+│   │       ├── confirmation-dialog.tsx
+│   │       └── search-input.tsx
+│   └── lib/
+│       ├── api/
+│       │   ├── auth.service.ts
+│       │   ├── forms.service.ts
+│       │   └── submissions.service.ts
+│       └── core/
+│           ├── api/client.ts     # Axios + interceptors
+│           ├── auth/
+│           │   ├── token-manager.ts
+│           │   ├── auth-provider.tsx
+│           │   └── auth-guard.tsx
+│           └── autosave/
+│               └── draft-manager.ts
+│
+└── docker-compose.yml           # Full stack
 ```
 
-## 3) Chạy local bằng Yarn
+---
 
-Yêu cầu:
+## Chạy để phát triển
 
-- Node.js 20+
-- Yarn 1.x
-- PostgreSQL đang chạy local
+**Yêu cầu:** Node.js 20+, Yarn 1.x, Docker.
 
-### Bước 1: Cài dependency
+### Bước 1: Khởi động Database & Redis
+
+```bash
+docker compose up -d postgres redis
+```
+
+### Bước 2: Cài đặt dependency
 
 ```bash
 yarn install
 ```
 
-### Bước 2: Setup biến môi trường
+### Bước 3: Cấu hình biến môi trường
 
-Copy file env mẫu:
+Tạo file `BE/.env`:
 
-- `BE/.env.example` -> `BE/.env`
-- `FE/.env.example` -> `FE/.env.local`
-
-### Bước 3: Tạo schema DB
-
-```bash
-yarn workspace be prisma:generate
-yarn workspace be prisma:push
+```env
+PORT=4000
+DATABASE_URL=postgresql://postgres:postgres@localhost:5433/form_management?schema=public
+REDIS_URL=redis://localhost:6380
+JWT_SECRET=change-me-in-production
+ADMIN_EMAIL=admin@example.com
+ADMIN_PASSWORD=admin123
+SW_EMAIL=sw@example.com
+SW_PASSWORD=sw123456
 ```
 
-### Bước 4: Chạy FE + BE cùng lúc
+Tạo file `FE/.env.local`:
+
+```env
+NEXT_PUBLIC_API_URL=http://localhost:4000
+```
+
+### Bước 4: Khởi tạo database
+
+```bash
+cd BE
+npx prisma generate
+npx prisma db push
+yarn seed
+```
+
+### Bước 5: Chạy ứng dụng
 
 ```bash
 yarn dev
 ```
 
-Truy cập:
+---
 
-- FE: `http://localhost:3000`
-- BE: `http://localhost:4000`
-- Swagger UI: `http://localhost:4000/api/docs`
-- OpenAPI yaml: `http://localhost:4000/api/docs/openapi.yaml`
-
-Tài khoản mặc định (tạo tự động khi BE boot):
-
-- Admin: `admin@example.com` / `admin123`
-- SW: `sw@example.com` / `sw123456`
-
-## 4) Chạy bằng Docker Compose
+## Chạy bằng Docker (Full Stack)
 
 ```bash
 docker compose up --build
 ```
 
-Services:
+Database sẽ tự động được migrate và seed dữ liệu.
 
-- FE: `http://localhost:3000`
-- BE: `http://localhost:4000`
-- PostgreSQL: `localhost:5432`
+---
 
-## 5) API đã implement
+## Thông tin truy cập
+
+- **Frontend:** http://localhost:3000
+- **Backend API:** http://localhost:4000
+- **Swagger UI:** http://localhost:4000/api/docs
+
+### Tài khoản mặc định
+
+| Role | Email | Password |
+|------|-------|----------|
+| ADMIN | admin@example.com | admin123 |
+| SW | sw@example.com | sw123456 |
+
+---
+
+## API Reference
+
+### Authentication
+
+| Method | Endpoint | Mô tả | Auth |
+|--------|---------|-------|------|
+| POST | `/api/auth/login` | Login, nhận access + refresh token | ❌ |
+| POST | `/api/auth/refresh` | Refresh tokens (silent) | Refresh Token |
+| POST | `/api/auth/logout` | Logout + xóa session | Access Token |
+| GET | `/api/auth/me` | Get current user | Access Token |
 
 ### Form Management
 
-- `GET /api/forms` (hỗ trợ `page`, `limit`, `search`, `status`)
-- `POST /api/forms`
-- `PUT /api/forms/reorder` (reorder nhanh nhiều form)
-- `GET /api/forms/:formId`
-- `PUT /api/forms/:formId`
-- `DELETE /api/forms/:formId`
+| Method | Endpoint | Mô tả | Auth |
+|--------|---------|-------|------|
+| GET | `/api/forms` | List all forms (pagination, search, filter) | ADMIN |
+| POST | `/api/forms` | Create form | ADMIN |
+| GET | `/api/forms/:id` | Get form details | ADMIN/SW |
+| PUT | `/api/forms/:id` | Update form | ADMIN |
+| DELETE | `/api/forms/:id` | Delete form | ADMIN |
+| PUT | `/api/forms/reorder` | Reorder forms | ADMIN |
+| GET | `/api/forms/active` | List active forms | SW/ADMIN |
 
 ### Field Management
 
-- `POST /api/forms/:formId/fields`
-- `PUT /api/forms/:formId/fields/reorder` (reorder nhanh nhiều field)
-- `PUT /api/forms/:formId/fields/:fieldId`
-- `DELETE /api/forms/:formId/fields/:fieldId`
+| Method | Endpoint | Mô tả | Auth |
+|--------|---------|-------|------|
+| POST | `/api/forms/:id/fields` | Add field | ADMIN |
+| PUT | `/api/forms/:id/fields/:fieldId` | Update field | ADMIN |
+| DELETE | `/api/forms/:id/fields/:fieldId` | Delete field | ADMIN |
+| PUT | `/api/forms/:id/fields/reorder` | Reorder fields (Drag & Drop) | ADMIN |
 
-### Submission
+### Submissions
 
-- `GET /api/forms/active`
-- `POST /api/forms/:formId/submit`
-- `GET /api/submission` (hỗ trợ `page`, `limit`)
+| Method | Endpoint | Mô tả | Auth |
+|--------|---------|-------|------|
+| POST | `/api/forms/:id/submit` | Submit form | ADMIN/SW |
+| GET | `/api/submission` | List submissions (admin) | ADMIN |
 
-### Auth
+---
 
-- `POST /api/auth/login`
-- `GET /api/auth/me`
+## Authentication
 
-Phân quyền:
+### Hybrid JWT + Redis Session
 
-- `ADMIN`: toàn bộ CRUD form/field, reorder, xem submissions
-- `SW`: xem form active, xem detail form active, submit form
+```
+Access Token: 15 phút (lưu localStorage + httpOnly cookie)
+Refresh Token: 7 ngày (lưu localStorage)
+Redis Session: 7 ngày (quản lý trạng thái, revoke được)
+```
 
-## 6) Validation rules
+### Auth Flow
 
-- `text`: chuỗi, tối đa 200 ký tự
-- `number`: từ 0 -> 100
-- `date`: không cho ngày quá khứ
-- `color`: HEX hợp lệ `#RRGGBB`
-- `select`: bắt buộc nằm trong danh sách option
-- `required`: kiểm tra bắt buộc theo cấu hình từng field
+1. **Login** → `POST /api/auth/login` → Nhận access + refresh token + session lưu Redis
+2. **API Call** → Gửi access token → Backend verify + check Redis
+3. **Token hết hạn (401)** → Axios interceptor auto gọi `/auth/refresh` → Nhận tokens mới
+4. **Logout** → `POST /auth/logout` → Xóa session Redis
 
-## 7) Error response format thống nhất
+### Phân quyền
+
+| Role | Permissions |
+|------|-------------|
+| ADMIN | Toàn bộ CRUD form/field, reorder, xem submissions |
+| SW | Xem form active, xem chi tiết form active, submit form |
+
+---
+
+## Validation
+
+### Field Types & Rules
+
+| Field Type | Rules | Error Message (FE) |
+|-----------|-------|------------------|
+| TEXT | max 200 ký tự | "Văn bản không được vượt quá 200 ký tự" |
+| NUMBER | 0-100 | "Số phải nằm trong khoảng 0-100" |
+| DATE | không quá khứ | "Ngày không được trong quá khứ" |
+| COLOR | #RRGGBB | "Mã màu phải dạng #RRGGBB (Ví dụ: #FF0000)" |
+| SELECT | phải chọn option | "Vui lòng chọn một lựa chọn" |
+| REQUIRED | bắt buộc | "Trường này bắt buộc" |
+
+### Validation Flow
+
+```
+FE: Nhập liệu → Validate real-time → Hiện error dưới field
+    ↓ submit
+BE: Validate lại → Trả error chi tiết nếu fail
+    ↓ success
+Database: Lưu submission
+```
+
+---
+
+## Error Response
+
+### Error Format
 
 ```json
 {
   "success": false,
   "error": {
     "code": "SUBMISSION_VALIDATION_FAILED",
-    "message": "Submission is invalid",
-    "details": []
+    "message": "Vui lòng kiểm tra lại các trường sau:\n- Tên: Trường này bắt buộc",
+    "details": [
+      { "fieldId": 1, "label": "Tên", "message": "Trường này bắt buộc" }
+    ]
   }
 }
 ```
 
-Success format:
+### Success Format
 
 ```json
 {
   "success": true,
   "data": {},
-  "meta": {}
+  "meta": { "page": 1, "limit": 10, "total": 50, "totalPages": 5 }
 }
 ```
 
-## 8) Test
+---
+
+## Test
 
 ```bash
 yarn workspace be test
 ```
 
-## 9) Seed du lieu mau
+---
 
-Seed co ban:
+## Seed dữ liệu
+
+### Seed cơ bản
 
 ```bash
 yarn workspace be seed
 ```
 
-Seed nang cao (nhieu form + submission de test pagination/filter/reorder):
+### Seed nâng cao (nhiều form + submission để test)
 
 ```bash
 yarn workspace be seed:advanced
 ```
 
-Co the tuy chinh quy mo qua env truoc khi chay `seed:advanced`:
+### Tùy chỉnh số lượng
 
-- `SEED_ACTIVE_FORMS` (mac dinh: 20)
-- `SEED_DRAFT_FORMS` (mac dinh: 8)
-- `SEED_SUBMISSIONS_PER_FORM` (mac dinh: 6)
-- `SEED_SW_USERS` (mac dinh: 6)
+| Variable | Default | Description |
+|----------|---------|-------------|
+| SEED_ACTIVE_FORMS | 20 | Số form active |
+| SEED_DRAFT_FORMS | 8 | Số form draft |
+| SEED_SUBMISSIONS_PER_FORM | 6 | Submissions mỗi form |
+| SEED_SW_USERS | 6 | Số user SW |
+
+```bash
+SEED_ACTIVE_FORMS=50 yarn workspace be seed:advanced
+```

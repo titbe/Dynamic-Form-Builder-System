@@ -1,13 +1,14 @@
 import "dotenv/config";
 import { app } from "./app";
-import { env } from "./config/env";
 import { authService } from "./modules/auth/auth.service";
+
+const port = process.env.PORT || 4000;
 
 const bootstrap = async () => {
   await authService.ensureDefaultUsers();
-  app.listen(env.port, () => {
+  app.listen(port, () => {
     // eslint-disable-next-line no-console
-    console.log(`BE server running on http://localhost:${env.port}`);
+    console.log(`BE server running on http://localhost:${port}`);
   });
 };
 

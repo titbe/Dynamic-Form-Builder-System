@@ -1,6 +1,7 @@
 "use client";
 
 import { Loader, Pagination, Select, Table, TextInput } from "@mantine/core";
+import { useDebouncedValue } from "@mantine/hooks";
 import { IconSearch } from "@tabler/icons-react";
 import {
   ColumnDef,
@@ -8,7 +9,7 @@ import {
   getCoreRowModel,
   useReactTable
 } from "@tanstack/react-table";
-import { ReactNode } from "react";
+import { ReactNode, useEffect, useState } from "react";
 
 type DataTableProps<T> = {
   columns: ColumnDef<T>[];
@@ -54,6 +55,19 @@ export const DataTable = <T,>({
     getCoreRowModel: getCoreRowModel()
   });
 
+  const [localSearch, setLocalSearch] = useState(searchValue || "");
+  const [debouncedSearchValue] = useDebouncedValue(localSearch, 500);
+
+  useEffect(() => {
+    if (onSearchChange && debouncedSearchValue !== searchValue) {
+      onSearchChange(debouncedSearchValue);
+    }
+  }, [debouncedSearchValue, onSearchChange, searchValue]);
+
+  useEffect(() => {
+    setLocalSearch(searchValue || "");
+  }, [searchValue]);
+
   return (
     <div className="rounded-xl border border-brand-200 bg-white p-4 shadow-sm">
       <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
@@ -61,8 +75,8 @@ export const DataTable = <T,>({
           <TextInput
             leftSection={<IconSearch size={16} />}
             placeholder="Search"
-            value={searchValue}
-            onChange={(event) => onSearchChange(event.currentTarget.value)}
+            value={localSearch}
+            onChange={(event) => setLocalSearch(event.currentTarget.value)}
             className="md:max-w-xs"
           />
         ) : (
@@ -76,28 +90,30 @@ export const DataTable = <T,>({
           <Loader />
         </div>
       ) : (
-        <Table striped highlightOnHover withTableBorder>
-          <Table.Thead>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <Table.Tr key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
-                  <Table.Th key={header.id}>
-                    {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
-                  </Table.Th>
-                ))}
-              </Table.Tr>
-            ))}
-          </Table.Thead>
-          <Table.Tbody>
-            {table.getRowModel().rows.map((row) => (
-              <Table.Tr key={row.id}>
-                {row.getVisibleCells().map((cell) => (
-                  <Table.Td key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</Table.Td>
-                ))}
-              </Table.Tr>
-            ))}
-          </Table.Tbody>
-        </Table>
+        <Table.ScrollContainer minWidth={800}>
+          <Table striped highlightOnHover withTableBorder>
+            <Table.Thead>
+              {table.getHeaderGroups().map((headerGroup) => (
+                <Table.Tr key={headerGroup.id}>
+                  {headerGroup.headers.map((header) => (
+                    <Table.Th key={header.id}>
+                      {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
+                    </Table.Th>
+                  ))}
+                </Table.Tr>
+              ))}
+            </Table.Thead>
+            <Table.Tbody>
+              {table.getRowModel().rows.map((row) => (
+                <Table.Tr key={row.id}>
+                  {row.getVisibleCells().map((cell) => (
+                    <Table.Td key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</Table.Td>
+                  ))}
+                </Table.Tr>
+              ))}
+            </Table.Tbody>
+          </Table>
+        </Table.ScrollContainer>
       )}
 
       {pagination ? (
@@ -106,6 +122,7 @@ export const DataTable = <T,>({
             total={Math.max(1, pagination.totalPages)}
             value={pagination.page}
             onChange={pagination.onPageChange}
+            withEdges
           />
           <Select
             className="md:w-24"

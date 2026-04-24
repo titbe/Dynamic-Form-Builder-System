@@ -5,12 +5,12 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { PageShell } from "@/components/core/page-shell";
-import { formsApi } from "@/lib/api/forms";
+import { formsService } from "@/lib/api";
 
 export default function SwFormsPage() {
   const activeQuery = useQuery({
     queryKey: ["active-forms"],
-    queryFn: formsApi.getActiveForms
+    queryFn: formsService.getActiveForms
   });
 
   return (
